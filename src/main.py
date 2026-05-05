@@ -14,11 +14,11 @@ import sys, os, matplotlib, matplotlib.pyplot as plt
 if "--save-only" in sys.argv or not os.environ.get("DISPLAY", ""):
     matplotlib.use("Agg")
 
-from propellants import get_propellant, list_propellants, create_custom_propellant, register_propellant
-from geometry    import BatesGrain, BatesSegment
-from nozzle      import NozzleGeometry, design_nozzle_from_thrust, design_nozzle_from_pressure, print_optimization_result
-from motor       import SolidMotorSimulator, MotorConfig
-from plots       import plot_full_dashboard, save_all_plots
+from src.propellants import get_propellant, list_propellants, create_custom_propellant, register_propellant
+from src.geometry    import BatesGrain, BatesSegment
+from src.nozzle      import NozzleGeometry, design_nozzle_from_thrust, design_nozzle_from_pressure, print_optimization_result
+from src.motor       import SolidMotorSimulator, MotorConfig
+from src.plots       import plot_full_dashboard, save_all_plots
 
 SHOW = "--save-only" not in sys.argv
 

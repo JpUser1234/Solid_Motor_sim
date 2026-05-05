@@ -28,9 +28,9 @@ from dataclasses import dataclass
 
 from scipy.optimize import brentq  # type: ignore
 
-from propellants.base import PropellantProperties
-from geometry.base_grain import GrainGeometry
-from nozzle.nozzle import NozzleGeometry
+from src.propellants.base import PropellantProperties
+from src.geometry.base_grain import GrainGeometry
+from src.nozzle.nozzle import NozzleGeometry
 
 
 @dataclass

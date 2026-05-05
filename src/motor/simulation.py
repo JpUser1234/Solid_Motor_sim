@@ -39,9 +39,9 @@ from typing import List
 
 import numpy as np
 
-from propellants.base import PropellantProperties
-from geometry.base_grain import GrainGeometry
-from nozzle.nozzle import NozzleGeometry
+from src.propellants.base import PropellantProperties
+from src.geometry.base_grain import GrainGeometry
+from src.nozzle.nozzle import NozzleGeometry
 
 _G0 = 9.80665   # standard gravity [m/s²]
 
