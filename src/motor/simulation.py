@@ -113,6 +113,16 @@ class MotorConfig:
     dt: float = 0.002                         # time step [s]
     max_burn_time: float = 120.0              # [s]  hard upper limit
     pressure_threshold_pa: float = 0.5e5     # minimum Pc to continue [Pa]
+    # -- Structural / vehicle defaults (optional) --------------------------------
+    casing_thickness_m: float = 0.002        # default casing wall thickness [m]
+    casing_yield_pa: float = 250e6           # material yield strength [Pa]
+    vehicle_dry_mass_kg: float = 1.0         # dry mass of motor/vehicle without propellant [kg]
+    frontal_area_m2: float = 0.01            # frontal area for drag [m²]
+    drag_coefficient: float = 0.75           # typical Cd
+    n_bolts: int = 6                         # number of retention bolts
+    bolt_shear_strength_pa: float = 400e6    # shear strength [Pa] (approx)
+    bolt_shank_area_m2: float = 3.14e-5      # bolt shank area (10 mm² ~) [m²]
+    bolt_bearing_area_m2: float = 1e-4       # bearing area under bolt [m²]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -316,49 +326,49 @@ class SolidMotorSimulator:
         grain  = cfg.grain
 
         W = 58
-        sep = "═" * W
+        sep = "=" * W
 
         print(f"\n{sep}")
-        print(f"{'  SOLID MOTOR SIMULATION — PERFORMANCE SUMMARY':^{W}}")
+        print(f"{'  SOLID MOTOR SIMULATION -- PERFORMANCE SUMMARY':^{W}}")
         print(sep)
 
-        print(f"\n  {'PROPELLANT':}")
+        print(f"\n  PROPELLANT:")
         print(f"    {prop.name}")
         print(f"    c* (theoretical)  = {prop.c_star:.1f} m/s")
-        print(f"    c* (effective)    = {prop.c_star*cfg.eta_cstar:.1f} m/s  (ηc* = {cfg.eta_cstar:.3f})")
-        print(f"    Tf  = {prop.flame_temperature:.0f} K     γ = {prop.gamma:.4f}")
+        print(f"    c* (effective)    = {prop.c_star*cfg.eta_cstar:.1f} m/s  (eta_c* = {cfg.eta_cstar:.3f})")
+        print(f"    Tf  = {prop.flame_temperature:.0f} K     gamma = {prop.gamma:.4f}")
 
-        print(f"\n  {'GRAIN':}")
+        print(f"\n  GRAIN:")
         print(f"    {grain!r}")
         print(f"    Initial propellant mass = {result.initial_propellant_mass*1000:.2f} g")
 
-        print(f"\n  {'NOZZLE':}")
+        print(f"\n  NOZZLE:")
         print(f"    Dt = {nozzle.throat_diameter*1000:.3f} mm   "
               f"De = {nozzle.exit_diameter*1000:.3f} mm   "
-              f"ε = {nozzle.expansion_ratio:.3f}")
-        print(f"    α = {nozzle.divergence_half_angle_deg:.1f}°   "
-              f"λ = {nozzle.lambda_divergence:.4f}   "
-              f"ηCF = {nozzle.eta_cf:.3f}")
+              f"eps = {nozzle.expansion_ratio:.3f}")
+        print(f"    alpha = {nozzle.divergence_half_angle_deg:.1f} deg   "
+              f"lambda = {nozzle.lambda_divergence:.4f}   "
+              f"eta_CF = {nozzle.eta_cf:.3f}")
 
-        print(f"\n  {'PERFORMANCE':}")
-        print(f"    Total impulse   (SL)  It  = {result.total_impulse:.2f} N·s")
-        print(f"    Total impulse   (vac) It  = {result.total_impulse_vacuum:.2f} N·s")
+        print(f"\n  PERFORMANCE:")
+        print(f"    Total impulse   (SL)  It  = {result.total_impulse:.2f} N.s")
+        print(f"    Total impulse   (vac) It  = {result.total_impulse_vacuum:.2f} N.s")
         print(f"    Specific impulse(SL)  Isp = {result.specific_impulse_sl:.1f} s")
         print(f"    Specific impulse(vac) Isp = {result.specific_impulse_vac:.1f} s")
         print(f"    Max thrust      Fmax = {result.max_thrust:.2f} N")
         print(f"    Avg thrust      Favg = {result.avg_thrust:.2f} N")
         print(f"    Burn time       tb   = {result.burn_time:.3f} s")
 
-        print(f"\n  {'CHAMBER / BURN':}")
+        print(f"\n  CHAMBER / BURN:")
         print(f"    Max  Pc = {result.max_chamber_pressure/1e6:.4f} MPa")
         print(f"    Avg  Pc = {result.avg_chamber_pressure/1e6:.4f} MPa")
         print(f"    Max  Kn = {result.max_klemung:.1f}")
 
-        print(f"\n  {'EFFICIENCY':}")
-        print(f"    ηc*  (combustion)  = {cfg.eta_cstar*100:.1f}%")
-        print(f"    ηCF  (nozzle)      = {nozzle.eta_cf*100:.1f}%")
-        print(f"    λ    (divergence)  = {nozzle.lambda_divergence*100:.2f}%")
-        print(f"    η    (delivered)   = {result.eta_delivered*100:.2f}%")
+        print(f"\n  EFFICIENCY:")
+        print(f"    eta_c*  (combustion)  = {cfg.eta_cstar*100:.1f}%")
+        print(f"    eta_CF  (nozzle)      = {nozzle.eta_cf*100:.1f}%")
+        print(f"    lambda  (divergence)  = {nozzle.lambda_divergence*100:.2f}%")
+        print(f"    eta     (delivered)   = {result.eta_delivered*100:.2f}%")
         print(f"    Propellant used    = {result.propellant_burnout_frac*100:.1f}%  "
               f"({result.propellant_consumed*1000:.2f} g)")
 

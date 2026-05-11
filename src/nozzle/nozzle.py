@@ -226,15 +226,15 @@ class NozzleGeometry:
             "Nozzle Geometry",
             f"  Throat diameter  Dt = {self.throat_diameter*1000:.3f} mm",
             f"  Exit diameter    De = {self.exit_diameter*1000:.3f} mm",
-            f"  Throat area      At = {self.throat_area*1e6:.4f} cm²",
-            f"  Expansion ratio   ε = {self.expansion_ratio:.3f}",
-            f"  Divergence angle  α = {self.divergence_half_angle_deg:.1f}°",
-            f"  Divergence factor λ = {self.lambda_divergence:.4f}",
-            f"  Nozzle efficiency ηCF = {self.eta_cf:.3f}",
+            f"  Throat area      At = {self.throat_area*1e6:.4f} cm2",
+            f"  Expansion ratio   eps = {self.expansion_ratio:.3f}",
+            f"  Divergence angle  alpha = {self.divergence_half_angle_deg:.1f} deg",
+            f"  Divergence factor lambda = {self.lambda_divergence:.4f}",
+            f"  Nozzle efficiency eta_CF = {self.eta_cf:.3f}",
         ]
         if gamma is not None:
             Me = self.exit_mach(gamma)
-            lines.append(f"  Exit Mach number Me = {Me:.3f}  (γ = {gamma:.3f})")
+            lines.append(f"  Exit Mach number Me = {Me:.3f}  (gamma = {gamma:.3f})")
         return "\n".join(lines)
 
     def __str__(self) -> str:

@@ -91,7 +91,7 @@ class BatesSegment:
         ends = "inhibited" if self.inhibited_ends else "uninhibited"
         return (
             f"BatesSegment(D={self.outer_diameter*1000:.1f} mm, "
-            f"d₀={self.inner_diameter*1000:.1f} mm, "
+            f"d0={self.inner_diameter*1000:.1f} mm, "
             f"Lg={self.length*1000:.1f} mm, "
             f"w={self.web_thickness*1000:.1f} mm, ends={ends})"
         )
@@ -259,17 +259,17 @@ class BatesGrain(GrainGeometry):
         if self.n_segments == 1 or all(
             s.inner_diameter == s0.inner_diameter for s in self._segments
         ):
-            lines.append(f"  Port diameter     d₀ = {s0.inner_diameter*1000:.2f} mm")
+            lines.append(f"  Port diameter     d0 = {s0.inner_diameter*1000:.2f} mm")
         else:
             lines.append("  Port diameters (mixed):")
             for i, s in enumerate(self._segments):
-                lines.append(f"    Seg {i+1}: d₀ = {s.inner_diameter*1000:.2f} mm")
+                lines.append(f"    Seg {i+1}: d0 = {s.inner_diameter*1000:.2f} mm")
         lines += [
             f"  Segment length    Lg = {s0.length*1000:.2f} mm",
             f"  Web thickness     w  = {s0.web_thickness*1000:.2f} mm",
             f"  Ends inhibited       = {s0.inhibited_ends}",
-            f"  Initial Ab        Ab₀= {state0.burning_area*1e4:.2f} cm²",
-            f"  Initial volume    Vg₀= {state0.volume*1e6:.2f} cm³",
+            f"  Initial Ab        Ab0 = {state0.burning_area*1e4:.2f} cm2",
+            f"  Initial volume    Vg0 = {state0.volume*1e6:.2f} cm3",
         ]
         return "\n".join(lines)
 
@@ -278,6 +278,6 @@ class BatesGrain(GrainGeometry):
         return (
             f"BatesGrain(N={self.n_segments}, "
             f"D={s0.outer_diameter*1000:.1f} mm, "
-            f"d₀={s0.inner_diameter*1000:.1f} mm, "
+            f"d0={s0.inner_diameter*1000:.1f} mm, "
             f"Lg={s0.length*1000:.1f} mm)"
         )

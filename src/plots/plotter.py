@@ -23,6 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as ticker
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from src.motor.simulation import SimulationResult
 
@@ -78,6 +79,7 @@ def plot_thrust_curve(
     result: SimulationResult,
     ax: Optional[plt.Axes] = None,
     vacuum: bool = False,
+    compare_vacuum: bool = False,
     label: str = "",
 ) -> plt.Axes:
     """Thrust vs time (SL or vacuum)."""
@@ -86,14 +88,36 @@ def plot_thrust_curve(
     if standalone:
         fig, ax = plt.subplots(figsize=(9, 4))
 
-    F  = result.thrust_vacuum if vacuum else result.thrust
-    lbl = label or ("Thrust (vacuum)" if vacuum else "Thrust (SL)")
-    ax.plot(result.time, F, color=_PALETTE["thrust"], label=lbl)
+    if compare_vacuum:
+        ax.plot(result.time, result.thrust, color=_PALETTE["thrust"], label="Thrust (SL)")
+        ax.plot(result.time, result.thrust_vacuum, color=_PALETTE["thrust"], linestyle="--", label="Thrust (vacuum)")
+        F = result.thrust_vacuum
+    else:
+        F = result.thrust_vacuum if vacuum else result.thrust
+        lbl = label or ("Thrust (vacuum)" if vacuum else "Thrust (SL)")
+        ax.plot(result.time, F, color=_PALETTE["thrust"], label=lbl)
     ax.set_xlabel("Time  [s]")
     ax.set_ylabel("Thrust  [N]")
     ax.set_title("Thrust vs Time")
     ax.legend()
+    ax.margins(x=0.02, y=0.12)
     _style_ax(ax)
+
+    # Zoomed inset to make the curve shape readable in static exports.
+    if result.time.size >= 4:
+        axins = inset_axes(ax, width="42%", height="42%", loc="upper right", borderpad=1.0)
+        axins.plot(result.time, result.thrust, color=_PALETTE["thrust"], linewidth=1.4)
+        axins.plot(result.time, result.thrust_vacuum, color=_PALETTE["thrust"], linestyle="--", linewidth=1.2)
+        peak_idx = int(np.argmax(F))
+        peak_t = float(result.time[peak_idx])
+        zoom_half_width = max(0.18, 0.18 * float(result.burn_time))
+        x0 = max(0.0, peak_t - zoom_half_width)
+        x1 = min(float(result.burn_time), peak_t + zoom_half_width)
+        y_peak = float(np.max(result.thrust_vacuum if compare_vacuum or vacuum else result.thrust))
+        axins.set_xlim(x0, x1)
+        axins.set_ylim(max(0.0, 0.65 * y_peak), 1.05 * y_peak)
+        axins.grid(True, alpha=0.18, linestyle="--")
+        axins.tick_params(labelsize=7)
 
     # Annotate max thrust
     idx_max = int(np.argmax(F))
@@ -114,6 +138,8 @@ def plot_chamber_pressure(
     result: SimulationResult,
     ax: Optional[plt.Axes] = None,
     label: str = "",
+    ambient_pressure_pa: Optional[float] = None,
+    ambient_label: str = "Ambient pressure",
 ) -> plt.Axes:
     """Chamber pressure vs time."""
     _apply_style()
@@ -123,10 +149,15 @@ def plot_chamber_pressure(
 
     Pc_MPa = result.chamber_pressure / 1.0e6
     ax.plot(result.time, Pc_MPa, color=_PALETTE["pressure"], label=label or "Pc")
+    if ambient_pressure_pa is not None:
+        ax.axhline(ambient_pressure_pa / 1.0e6, color="#666", linestyle="--", linewidth=1.2, label=ambient_label)
     ax.set_xlabel("Time  [s]")
     ax.set_ylabel("Chamber Pressure  [MPa]")
     ax.set_title("Chamber Pressure vs Time")
     ax.legend()
+    ax.margins(x=0.02, y=0.12)
+    if Pc_MPa.size:
+        ax.set_ylim(0.0, float(np.max(Pc_MPa)) * 1.15)
     _style_ax(ax)
 
     # Annotate max Pc
@@ -274,15 +305,19 @@ def plot_full_dashboard(
     # ── Row 0 ─────────────────────────────────────────────────────────────────
 
     ax00 = fig.add_subplot(gs[0, 0])
-    ax00.plot(result.time, result.thrust, color=_PALETTE["thrust"])
+    ax00.plot(result.time, result.thrust, color=_PALETTE["thrust"], label="Thrust (SL)")
+    ax00.plot(result.time, result.thrust_vacuum, color=_PALETTE["thrust"], linestyle="--", label="Thrust (vacuum)")
     ax00.set_xlabel("Time [s]"); ax00.set_ylabel("Thrust [N]")
-    ax00.set_title("Thrust  (SL)")
+    ax00.set_title("Thrust")
+    ax00.legend()
     _style_ax(ax00)
 
     ax01 = fig.add_subplot(gs[0, 1])
-    ax01.plot(result.time, result.chamber_pressure / 1e6, color=_PALETTE["pressure"])
+    ax01.plot(result.time, result.chamber_pressure / 1e6, color=_PALETTE["pressure"], label="Chamber pressure")
+    ax01.axhline(0.0, color="#666", linestyle="--", linewidth=1.0, label="Ambient (vacuum)")
     ax01.set_xlabel("Time [s]"); ax01.set_ylabel("Pc [MPa]")
     ax01.set_title("Chamber Pressure")
+    ax01.legend()
     _style_ax(ax01)
 
     ax02 = fig.add_subplot(gs[0, 2])
@@ -337,7 +372,7 @@ def save_all_plots(
     eta_cf: float = 0.97,
     lambda_div: float = 0.983,
     fmt: str = "png",
-    dpi: int = 150,
+    dpi: int = 220,
 ) -> list[str]:
     """
     Save all individual plots + dashboard to `output_dir`.
@@ -356,11 +391,13 @@ def save_all_plots(
         return path
 
     # Individual
-    fig, ax = plt.subplots(figsize=(9, 4)); plot_thrust_curve(result, ax=ax);       plt.tight_layout(); _save(fig, "thrust")
-    fig, ax = plt.subplots(figsize=(9, 4)); plot_chamber_pressure(result, ax=ax);   plt.tight_layout(); _save(fig, "pressure")
-    fig, ax = plt.subplots(figsize=(9, 4)); plot_mass_flow(result, ax=ax);          plt.tight_layout(); _save(fig, "mass_flow")
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(12, 4)); plot_burning_area_kn(result, (a1, a2)); plt.tight_layout(); _save(fig, "area_kn")
+    fig, ax = plt.subplots(figsize=(11, 5)); plot_thrust_curve(result, ax=ax, compare_vacuum=True); _save(fig, "thrust")
+    fig, ax = plt.subplots(figsize=(11, 5)); plot_chamber_pressure(result, ax=ax, ambient_pressure_pa=0.0, ambient_label="Ambient (vacuum)"); plt.tight_layout(); _save(fig, "pressure")
+    fig, ax = plt.subplots(figsize=(11, 5)); plot_mass_flow(result, ax=ax);          plt.tight_layout(); _save(fig, "mass_flow")
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(14, 5)); plot_burning_area_kn(result, (a1, a2)); plt.tight_layout(); _save(fig, "area_kn")
     fig, ax = plt.subplots(figsize=(8, 4));  plot_efficiency_breakdown(result, eta_cstar, eta_cf, lambda_div, ax=ax); plt.tight_layout(); _save(fig, "efficiency")
+    fig, ax = plt.subplots(figsize=(11, 5)); plot_thrust_curve(result, ax=ax, vacuum=True); _save(fig, "thrust_vacuum")
+    fig, ax = plt.subplots(figsize=(11, 5)); plot_chamber_pressure(result, ax=ax, ambient_pressure_pa=0.0, ambient_label="Ambient (vacuum)"); plt.tight_layout(); _save(fig, "pressure_vacuum")
 
     # Dashboard
     fig_dash = plot_full_dashboard(result, motor_name, eta_cstar, eta_cf, lambda_div)
